@@ -118,7 +118,7 @@ export default function VibeSelector() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="px-8 py-4 bg-white/80 backdrop-blur-sm z-10">
+      <div className="px-8 py-2 bg-gray-50 z-10">
         <h2 className="text-2xl font-bold text-gray-900">
           What's the vibe you're looking for?
         </h2>
@@ -129,7 +129,7 @@ export default function VibeSelector() {
         {/* Navigation Arrows */}
         <button
           onClick={handlePrev}
-          className={`absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg transition-opacity duration-200 ${
+          className={`absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-50/80 backdrop-blur-sm shadow-lg transition-opacity duration-200 ${
             currentIndex === 0 ? 'opacity-0' : 'opacity-100'
           }`}
           disabled={currentIndex === 0}
@@ -138,7 +138,7 @@ export default function VibeSelector() {
         </button>
         <button
           onClick={handleNext}
-          className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg transition-opacity duration-200 ${
+          className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 rounded-full bg-gray-50/80 backdrop-blur-sm shadow-lg transition-opacity duration-200 ${
             currentIndex === VIBES.length - 1 ? 'opacity-0' : 'opacity-100'
           }`}
           disabled={currentIndex === VIBES.length - 1}
@@ -146,74 +146,67 @@ export default function VibeSelector() {
           <ChevronRightIcon className="h-6 w-6 text-gray-800" />
         </button>
 
-        {/* Vibe Carousel */}
-        <div
+        {/* Image Carousel */}
+        <div 
+          className="flex h-full snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
           ref={scrollContainerRef}
-          className="h-full flex snap-x snap-mandatory overflow-x-auto scrollbar-hide"
-          onScroll={handleScroll}
         >
           {VIBES.map((vibe, index) => (
             <div
               key={vibe.id}
-              className="w-full h-full flex-none snap-center flex items-center justify-center p-8"
+              className="flex-none w-full h-full snap-center"
             >
-              <button
-                onClick={() => handleVibeSelect(vibe.id)}
-                className={`relative group ${
-                  selectedVibe === vibe.id ? 'ring-4 ring-primary-500' : ''
-                }`}
-              >
-                <img
-                  src={vibe.imageUrl}
-                  alt={vibe.name}
-                  className="max-h-[calc(100vh-12rem)] w-auto object-contain"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-8 text-left transform transition-transform duration-300">
-                  <div className="flex items-center">
-                    <span className="text-5xl mr-4">{vibe.emoji}</span>
-                    <h3 className={`text-3xl font-bold text-white ${vibe.titleColor}`}>
-                      {vibe.name}
-                    </h3>
-                  </div>
-                </div>
-              </button>
+              <div className="h-full flex items-start justify-center px-4 pt-4">
+                <button
+                  onClick={() => handleVibeSelect(vibe.id)}
+                  className={`relative rounded-lg overflow-hidden transition-transform duration-200 ${
+                    selectedVibe === vibe.id ? 'ring-4 ring-primary-500 scale-[0.98]' : 'hover:scale-[0.98]'
+                  }`}
+                >
+                  <img
+                    src={vibe.imageUrl}
+                    alt={vibe.name}
+                    className="w-auto h-[65vh] object-contain"
+                  />
+                </button>
+              </div>
             </div>
           ))}
         </div>
 
         {/* Dot Indicators */}
-        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+        <div className="absolute bottom-48 left-1/2 -translate-x-1/2 flex space-x-2">
           {VIBES.map((_, index) => (
             <button
               key={index}
               onClick={() => scrollToVibe(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                currentIndex === index
-                  ? 'bg-white w-8'
-                  : 'bg-white/50 hover:bg-white/70'
+              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                currentIndex === index ? 'bg-primary-500 w-4' : 'bg-gray-400'
               }`}
-              aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="px-8 py-6 bg-white/80 backdrop-blur-sm z-10 flex justify-between items-center">
-        <button
-          onClick={handleBack}
-          className="btn btn-secondary"
-        >
-          Back
-        </button>
-        <button
-          onClick={handleContinue}
-          className="btn btn-primary"
-          disabled={!selectedVibe}
-        >
-          Next
-        </button>
+        {/* Navigation Buttons */}
+        <div className="absolute bottom-24 left-0 right-0 px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex justify-between">
+              <button
+                onClick={handleBack}
+                className="btn btn-secondary"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleContinue}
+                className="btn btn-primary"
+                disabled={!selectedVibe}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
