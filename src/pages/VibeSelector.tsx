@@ -115,12 +115,12 @@ export default function VibeSelector() {
         >
           Back
         </button>
-        <button
+                  <button
           onClick={handleContinue}
           className="btn btn-primary"
           disabled={!selectedVibe}
         >
-          Next: Choose Theme
+          Next
         </button>
       </div>
     </div>

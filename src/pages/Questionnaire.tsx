@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { TrashIcon } from '@heroicons/react/24/outline';
 
 type AgeGroup = 'preschool' | 'elementary' | 'tweens' | 'teens' | 'adults';
 
 type FamilyMember = {
   id: string;
   ageGroup: AgeGroup | '';
+  error?: string;
 };
 
 type ContentPreferences = {
@@ -18,11 +20,56 @@ type ContentPreferences = {
 };
 
 const AGE_GROUPS: { value: AgeGroup; label: string }[] = [
-  { value: 'preschool', label: 'Preschool (under 5)' },
-  { value: 'elementary', label: 'Elementary (5-9)' },
-  { value: 'tweens', label: 'Tween (10-12)' },
-  { value: 'teens', label: 'Teen (13-17)' },
-  { value: 'adults', label: 'Adult (18+)' },
+  { 
+    value: 'preschool', 
+    label: 'Preschool (under 5)'
+  },
+  { 
+    value: 'elementary', 
+    label: 'Elementary (5-9)'
+  },
+  { 
+    value: 'tweens', 
+    label: 'Tween (10-12)'
+  },
+  { 
+    value: 'teens', 
+    label: 'Teen (13-17)'
+  },
+  { 
+    value: 'adults', 
+    label: 'Adult (18+)'
+  }
+];
+
+const CONTENT_PREFERENCES: { 
+  key: keyof ContentPreferences; 
+  label: string;
+}[] = [
+  {
+    key: 'avoidGriefLoss',
+    label: 'Themes of grief and loss'
+  },
+  {
+    key: 'avoidSubstances',
+    label: 'Drinking, drugs, smoking'
+  },
+  {
+    key: 'avoidRomanceSexuality',
+    label: 'Romance and sexuality'
+  },
+  {
+    key: 'avoidViolenceScare',
+    label: 'Violence and scariness'
+  },
+  {
+    key: 'avoidProfanity',
+    label: 'Strong language'
+  },
+  {
+    key: 'avoidProductPlacement',
+    label: 'Product placement'
+  }
 ];
 
 export default function Questionnaire() {
@@ -57,7 +104,7 @@ export default function Questionnaire() {
   const updateFamilyMemberAge = (id: string, ageGroup: AgeGroup) => {
     setFamilyMembers(
       familyMembers.map(member =>
-        member.id === id ? { ...member, ageGroup } : member
+        member.id === id ? { ...member, ageGroup, error: undefined } : member
       )
     );
   };
@@ -75,14 +122,31 @@ export default function Questionnaire() {
     });
   };
 
+  const validateStep = () => {
+    if (step === 1) {
+      const newFamilyMembers = familyMembers.map(member => ({
+        ...member,
+        error: member.ageGroup === '' ? 'Please select an age group' : undefined
+      }));
+      setFamilyMembers(newFamilyMembers);
+      return newFamilyMembers.every(member => !member.error);
+    }
+    return true;
+  };
+
   const handleNext = () => {
+    if (!validateStep()) return;
+
     if (step < 2) {
       setStep(step + 1);
     } else {
-      // Here we would typically save the data and navigate to the next page
-      console.log('Family Members:', familyMembers);
-      console.log('Preferences:', preferences);
-      navigate('/vibe-selector');
+      // Save data and navigate
+      const familyData = {
+        members: familyMembers,
+        preferences: preferences
+      };
+      console.log('Saving family data:', familyData);
+      navigate('/vibe-selector', { state: { familyData } });
     }
   };
 
@@ -94,24 +158,12 @@ export default function Questionnaire() {
     }
   };
 
-  const isStepValid = () => {
-    if (step === 1) {
-      return familyMembers.every(member => member.ageGroup !== '');
-    }
-    return true;
-  };
-
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto p-6">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {step === 1 ? "Who's Watching?" : "Content Preferences"}
-          </h2>
-          <div className="text-sm text-gray-500">
-            Step {step} of 2
-          </div>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          {step === 1 ? "Who's Watching?" : "Content Preferences"}
+        </h2>
 
         {step === 1 ? (
           <div className="space-y-4">
@@ -124,7 +176,8 @@ export default function Questionnaire() {
                   <select
                     value={member.ageGroup}
                     onChange={(e) => updateFamilyMemberAge(member.id, e.target.value as AgeGroup)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white"
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 bg-white
+                      ${member.error ? 'border-red-500' : 'border-gray-300'}`}
                   >
                     <option value="">Select age group</option>
                     {AGE_GROUPS.map((group) => (
@@ -133,13 +186,17 @@ export default function Questionnaire() {
                       </option>
                     ))}
                   </select>
+                  {member.error && (
+                    <p className="mt-1 text-sm text-red-500">{member.error}</p>
+                  )}
                 </div>
                 {familyMembers.length > 1 && (
                   <button
                     onClick={() => removeFamilyMember(member.id)}
                     className="mt-6 text-red-600 hover:text-red-700"
+                    aria-label="Remove family member"
                   >
-                    Remove
+                    <TrashIcon className="h-5 w-5" />
                   </button>
                 )}
               </div>
@@ -158,80 +215,36 @@ export default function Questionnaire() {
                 Would you like to avoid any of the following?
               </h3>
               <div className="space-y-4">
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidGriefLoss}
-                    onChange={() => updatePreference('avoidGriefLoss')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Themes of grief and loss</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidSubstances}
-                    onChange={() => updatePreference('avoidSubstances')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Drinking, drugs, smoking</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidRomanceSexuality}
-                    onChange={() => updatePreference('avoidRomanceSexuality')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Romance and sexuality</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidViolenceScare}
-                    onChange={() => updatePreference('avoidViolenceScare')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Violence and scariness</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidProfanity}
-                    onChange={() => updatePreference('avoidProfanity')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Curse words</span>
-                </label>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={preferences.avoidProductPlacement}
-                    onChange={() => updatePreference('avoidProductPlacement')}
-                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                  />
-                  <span>Product placement</span>
-                </label>
+                {CONTENT_PREFERENCES.map((pref) => (
+                  <label key={pref.key} className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={preferences[pref.key]}
+                      onChange={() => updatePreference(pref.key)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                    <span>{pref.label}</span>
+                  </label>
+                ))}
               </div>
             </div>
           </div>
         )}
-      </div>
 
-      <div className="flex justify-between pt-6">
-        <button
-          onClick={handleBack}
-          className="btn btn-secondary"
-        >
-          {step === 1 ? 'Cancel' : 'Back'}
-        </button>
-        <button
-          onClick={handleNext}
-          className="btn btn-primary"
-          disabled={!isStepValid()}
-        >
-          {step === 2 ? 'Continue to Mood Board' : 'Next'}
-        </button>
+        <div className="flex justify-between mt-8">
+          <button
+            onClick={handleBack}
+            className="btn btn-secondary"
+          >
+            Back
+          </button>
+                      <button
+              onClick={handleNext}
+              className="btn btn-primary"
+            >
+              Next
+            </button>
+        </div>
       </div>
     </div>
   );
