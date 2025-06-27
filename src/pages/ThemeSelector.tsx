@@ -4,52 +4,39 @@ import { useNavigate } from 'react-router-dom';
 type Theme = {
   id: string;
   name: string;
-  description: string;
-  emoji: string;
+  imageUrl: string;
 };
 
 const THEMES: Theme[] = [
   {
     id: 'animals',
     name: 'Animal Friends',
-    description: 'Movies featuring lovable animal companions',
-    emoji: '🐾'
+    imageUrl: '/src/assets/themes/animal_friends.jpg'
   },
   {
     id: 'sports',
     name: 'Sports',
-    description: 'Inspiring stories of athletic achievement',
-    emoji: '⚽'
-  },
-  {
-    id: 'winter',
-    name: 'Snow Day',
-    description: 'Cozy winter and snowy weather adventures',
-    emoji: '❄️'
+    imageUrl: '/src/assets/themes/sports.jpg'
   },
   {
     id: 'summer',
     name: 'Summer Fun',
-    description: 'Sun-filled adventures and vacation vibes',
-    emoji: '☀️'
-  },
-  {
-    id: 'autumn',
-    name: 'Autumn Magic',
-    description: 'Fall festivities and magical moments',
-    emoji: '🍁'
-  },
-  {
-    id: 'christmas',
-    name: 'Christmas',
-    description: 'Holiday cheer and festive celebrations',
-    emoji: '🎄'
+    imageUrl: '/src/assets/themes/summer_fun.jpg'
   },
   {
     id: 'halloween',
     name: 'Halloween',
-    description: 'Not-too-spooky fun for the whole family',
-    emoji: '🎃'
+    imageUrl: '/src/assets/themes/halloween.jpg'
+  },
+  {
+    id: 'christmas',
+    name: 'Christmas',
+    imageUrl: '/src/assets/themes/christmas.jpg'
+  },
+  {
+    id: 'winter',
+    name: 'Snow Day',
+    imageUrl: '/src/assets/themes/snow_day.jpg'
   }
 ];
 
@@ -89,21 +76,22 @@ export default function ThemeSelector() {
             key={theme.id}
             onClick={() => handleThemeSelect(theme.id)}
             className={`
-              p-6 rounded-xl text-left transition-all duration-200
+              relative h-48 rounded-xl overflow-hidden transition-all duration-200
               ${
                 selectedTheme === theme.id
-                  ? 'bg-white border-2 border-primary-500 shadow-lg'
-                  : 'bg-white border border-gray-200 hover:border-primary-300 hover:shadow'
+                  ? 'ring-4 ring-primary-500 scale-[0.98]'
+                  : 'hover:scale-[0.98]'
               }
             `}
           >
-            <div className="text-4xl mb-3">{theme.emoji}</div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div 
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${theme.imageUrl})` }}
+            />
+            <div className="absolute inset-0 bg-black/40 hover:bg-black/30 transition-colors duration-200" />
+            <h3 className="absolute inset-0 flex items-center justify-center text-2xl font-bold text-white">
               {theme.name}
             </h3>
-            <p className="text-gray-600 text-sm">
-              {theme.description}
-            </p>
           </button>
         ))}
       </div>
