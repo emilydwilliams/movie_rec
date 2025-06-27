@@ -23,42 +23,42 @@ const VIBES: Vibe[] = [
     name: 'Silly and Sweet',
     emoji: '🧁',
     imageUrl: '/src/assets/vibes/sweet_silly.png',
-    titleColor: 'text-pink-500'
+    titleColor: 'text-[#dd6354]'
   },
   {
     id: 'adventure',
     name: 'Adventure Time',
     emoji: '🚀',
     imageUrl: '/src/assets/vibes/adventure.png',
-    titleColor: 'text-blue-600'
+    titleColor: 'text-[#38798b]'
   },
   {
     id: 'artsy',
-    name: 'Artsy and Beautiful',
+    name: 'Artistic Animation',
     emoji: '🎨',
     imageUrl: '/src/assets/vibes/artistic.png',
-    titleColor: 'text-purple-600'
+    titleColor: 'text-[#476cae]'
   },
   {
     id: 'musical',
     name: 'Musical Fun',
     emoji: '🎶',
     imageUrl: '/src/assets/vibes/musicals.png',
-    titleColor: 'text-yellow-600'
+    titleColor: 'text-[#dfad03]'
   },
   {
     id: 'classic',
     name: 'True Classic',
     emoji: '🎬',
     imageUrl: '/src/assets/vibes/classic.png',
-    titleColor: 'text-gray-700'
+    titleColor: 'text-[#593b36]'
   },
   {
     id: 'millennial',
     name: 'Millennial Childhood',
     emoji: '📼',
     imageUrl: '/src/assets/vibes/millennial.png',
-    titleColor: 'text-indigo-600'
+    titleColor: 'text-[#959dee]'
   }
 ];
 
@@ -159,7 +159,7 @@ export default function VibeSelector() {
               <div className="h-full flex items-start justify-center px-4 pt-4">
                 <button
                   onClick={() => handleVibeSelect(vibe.id)}
-                  className={`relative rounded-lg overflow-hidden transition-transform duration-200 ${
+                  className={`relative rounded-lg overflow-hidden transition-transform duration-200 flex flex-col items-center ${
                     selectedVibe === vibe.id ? 'ring-4 ring-primary-500 scale-[0.98]' : 'hover:scale-[0.98]'
                   }`}
                 >
@@ -168,6 +168,7 @@ export default function VibeSelector() {
                     alt={vibe.name}
                     className="w-auto h-[65vh] object-contain"
                   />
+                  <p className={`text-xl font-bold mt-4 ${vibe.titleColor}`}>{vibe.name}</p>
                 </button>
               </div>
             </div>
@@ -175,7 +176,7 @@ export default function VibeSelector() {
         </div>
 
         {/* Dot Indicators */}
-        <div className="absolute bottom-48 left-1/2 -translate-x-1/2 flex space-x-2">
+        <div className="absolute bottom-44 left-1/2 -translate-x-1/2 flex space-x-2">
           {VIBES.map((_, index) => (
             <button
               key={index}
