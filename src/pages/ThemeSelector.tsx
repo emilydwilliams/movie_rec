@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 type Theme = {
   id: string;
@@ -42,7 +42,15 @@ const THEMES: Theme[] = [
 
 export default function ThemeSelector() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedTheme, setSelectedTheme] = useState<string>('');
+
+  // Verify we have the required data
+  if (!location.state?.familyData || !location.state?.selectedVibe) {
+    console.error('Missing required data, redirecting to questionnaire');
+    navigate('/questionnaire');
+    return null;
+  }
 
   const handleThemeSelect = (themeId: string) => {
     setSelectedTheme(themeId);
@@ -51,12 +59,22 @@ export default function ThemeSelector() {
   const handleContinue = () => {
     if (selectedTheme) {
       console.log('Selected theme:', selectedTheme);
-      navigate('/recommendations');
+      navigate('/recommendations', { 
+        state: { 
+          familyData: location.state.familyData,
+          selectedVibe: location.state.selectedVibe,
+          selectedTheme 
+        } 
+      });
     }
   };
 
   const handleBack = () => {
-    navigate('/vibe-selector');
+    navigate('/vibe-selector', { 
+      state: { 
+        familyData: location.state.familyData 
+      } 
+    });
   };
 
   return (

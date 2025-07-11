@@ -1,59 +1,54 @@
 import { useEffect, useState } from 'react';
 import { tmdbService } from '../services/tmdb';
-import type { TMDBMovie, TMDBGenre } from '../services/tmdb';
+import { movieRecommendations, type TMDBMovie, type VibeType, type AgeGroup } from '../services/movieRecommendations';
 
 export default function MovieTest() {
   const [movies, setMovies] = useState<TMDBMovie[]>([]);
-  const [genres, setGenres] = useState<TMDBGenre[]>([]);
+  const [selectedVibe, setSelectedVibe] = useState<VibeType>('cozy');
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
+  const VIBES: VibeType[] = ['cozy', 'silly', 'adventure', 'artsy', 'musical', 'classic', 'millennial'];
+
   useEffect(() => {
     async function loadTestData() {
-      console.log('Starting to load test data...');
+      console.log('Loading recommendations for vibe:', selectedVibe);
       try {
-        // Test the cozy vibe filter
-        const cozyFilter = {
-          genres: [], // We'll populate this once we have genre IDs
-          yearEnd: undefined,
-          minRating: 7.0,
-          certifications: ['G', 'PG']
+        setLoading(true);
+        setError('');
+
+        // Test with a family that has kids of different ages
+        const ageGroups: AgeGroup[] = ['elementary', 'teens'];
+        
+        // Test with some content preferences
+        const preferences = {
+          avoidGriefLoss: true,
+          avoidSubstances: true,
+          avoidRomanceSexuality: false,
+          avoidViolenceScare: true,
+          avoidProfanity: true,
+          avoidProductPlacement: false
         };
 
-        // Get genres first
-        console.log('Fetching genres...');
-        const genreList = await tmdbService.getGenres();
-        console.log('Received genres:', genreList);
-        setGenres(genreList);
+        const recommendations = await movieRecommendations.getRecommendations(
+          selectedVibe,
+          ageGroups,
+          preferences,
+          12 // Get more movies for testing
+        );
 
-        // Find genre IDs for 'family' and 'fantasy'
-        const familyGenre = genreList.find(g => g.name.toLowerCase() === 'family');
-        const fantasyGenre = genreList.find(g => g.name.toLowerCase() === 'fantasy');
-
-        if (familyGenre && fantasyGenre) {
-          cozyFilter.genres = [familyGenre.id, fantasyGenre.id];
-          console.log('Using genre IDs:', cozyFilter.genres);
-        } else {
-          console.warn('Could not find family or fantasy genres');
-        }
-
-        // Get movies
-        console.log('Fetching movies with filter:', cozyFilter);
-        const response = await tmdbService.discoverMovies(cozyFilter);
-        console.log('Received movies:', response.results);
-        setMovies(response.results);
+        console.log(`Found ${recommendations.length} recommendations`);
+        setMovies(recommendations);
         setLoading(false);
       } catch (err) {
-        console.error('Error loading data:', err);
+        console.error('Error loading recommendations:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
         setLoading(false);
       }
     }
 
     loadTestData();
-  }, []);
-
-  console.log('Rendering with:', { loading, error, genresCount: genres.length, moviesCount: movies.length });
+  }, [selectedVibe]);
 
   if (loading) {
     return <div className="p-4">Loading...</div>;
@@ -65,34 +60,45 @@ export default function MovieTest() {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">TMDB Test - Cozy Vibe Movies</h2>
-      
-      <div className="mb-4">
-        <h3 className="font-semibold">Available Genres:</h3>
-        <div className="flex flex-wrap gap-2">
-          {genres.map(genre => (
-            <span 
-              key={genre.id}
-              className="px-2 py-1 bg-gray-100 rounded-full text-sm"
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-4">TMDB Test - Movie Recommendations</h2>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          {VIBES.map(vibe => (
+            <button
+              key={vibe}
+              onClick={() => setSelectedVibe(vibe)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors
+                ${selectedVibe === vibe 
+                  ? 'bg-primary-600 text-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}
             >
-              {genre.name}
-            </span>
+              {vibe.charAt(0).toUpperCase() + vibe.slice(1)}
+            </button>
           ))}
+        </div>
+
+        <div className="text-sm text-gray-600 mb-4">
+          Testing with: Elementary + Teen ages, avoiding grief/substances/violence/profanity
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {movies.map(movie => (
           <div 
             key={movie.id}
-            className="border rounded-lg overflow-hidden shadow-sm"
+            className="border rounded-lg overflow-hidden shadow-sm bg-white"
           >
-            {movie.poster_path && (
+            {movie.poster_path ? (
               <img
                 src={tmdbService.getImageUrl(movie.poster_path)}
                 alt={movie.title}
                 className="w-full h-64 object-cover"
               />
+            ) : (
+              <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">No poster available</span>
+              </div>
             )}
             <div className="p-4">
               <h3 className="font-bold">{movie.title}</h3>
@@ -102,13 +108,19 @@ export default function MovieTest() {
               <p className="text-sm mt-2">
                 Rating: {movie.vote_average.toFixed(1)}/10
               </p>
-              <p className="text-sm mt-2 line-clamp-3">
+              <p className="text-sm mt-2 line-clamp-3 text-gray-600">
                 {movie.overview}
               </p>
             </div>
           </div>
         ))}
       </div>
+
+      {movies.length === 0 && (
+        <div className="text-center text-gray-500 mt-8">
+          No movies found for the selected criteria
+        </div>
+      )}
     </div>
   );
 } 

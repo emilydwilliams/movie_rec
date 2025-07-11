@@ -41,7 +41,8 @@ export type MovieFilters = {
   minRating?: number;
   certifications?: string[];
   language?: string;
-}
+  keywords?: string[];
+};
 
 class TMDBService {
   private apiKey: string;
@@ -137,6 +138,28 @@ class TMDBService {
 
     if (filters.language) {
       params.with_original_language = filters.language;
+    }
+
+    // Add keyword filtering
+    if (filters.keywords?.length) {
+      // First, search for keyword IDs
+      const keywordIds = await Promise.all(
+        filters.keywords.map(async keyword => {
+          try {
+            const response = await this.fetchFromTMDB<{ results: { id: number }[] }>('/search/keyword', { query: keyword });
+            return response.results[0]?.id; // Get the first matching keyword ID
+          } catch (error) {
+            console.warn(`Failed to find keyword ID for "${keyword}":`, error);
+            return null;
+          }
+        })
+      );
+
+      // Filter out null values and join IDs
+      const validKeywordIds = keywordIds.filter((id): id is number => id !== null);
+      if (validKeywordIds.length > 0) {
+        params.with_keywords = validKeywordIds.join('|');
+      }
     }
 
     return this.fetchFromTMDB('/discover/movie', params);

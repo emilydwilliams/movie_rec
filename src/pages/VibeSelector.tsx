@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 type Vibe = {
@@ -64,9 +64,17 @@ const VIBES: Vibe[] = [
 
 export default function VibeSelector() {
   const navigate = useNavigate();
+  const location = useLocation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [selectedVibe, setSelectedVibe] = useState<string>('');
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Verify we have the required data
+  if (!location.state?.familyData) {
+    console.error('Missing family data, redirecting to questionnaire');
+    navigate('/questionnaire');
+    return null;
+  }
 
   const handleVibeSelect = (vibeId: string) => {
     setSelectedVibe(vibeId);
@@ -75,12 +83,22 @@ export default function VibeSelector() {
   const handleContinue = () => {
     if (selectedVibe) {
       console.log('Selected vibe:', selectedVibe);
-      navigate('/theme-selector');
+      navigate('/theme-selector', { 
+        state: { 
+          familyData: location.state.familyData,
+          selectedVibe 
+        } 
+      });
     }
   };
 
   const handleBack = () => {
-    navigate('/questionnaire', { state: { step: 2 } });
+    navigate('/questionnaire', { 
+      state: { 
+        step: 2,
+        familyData: location.state.familyData 
+      } 
+    });
   };
 
   const scrollToVibe = (index: number) => {
