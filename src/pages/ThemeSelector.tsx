@@ -94,6 +94,23 @@ export default function ThemeSelector() {
             </h3>
           </button>
         ))}
+        
+        {/* No Theme Option */}
+        <button
+          onClick={() => handleThemeSelect('none')}
+          className={`
+            relative h-48 rounded-xl transition-all duration-200 border-2 border-dashed border-gray-300
+            ${
+              selectedTheme === 'none'
+                ? 'ring-4 ring-primary-500 scale-[0.98] bg-gray-50'
+                : 'hover:scale-[0.98] hover:bg-gray-50'
+            }
+          `}
+        >
+          <h3 className="text-2xl font-bold text-gray-500">
+            No Theme
+          </h3>
+        </button>
       </div>
 
       <div className="flex justify-between pt-6">
