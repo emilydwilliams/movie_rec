@@ -20,48 +20,69 @@ type VibeConfig = {
   yearEnd?: number;
   minRating: number;
   preferredCertifications: string[];
+  keywords?: string[];
 };
 
 const VIBE_CONFIGS: Record<VibeType, VibeConfig> = {
   cozy: {
-    genres: ['family', 'fantasy'],
+    genres: ['family', 'fantasy', 'animation'],
     minRating: 7.0,
-    preferredCertifications: ['G', 'PG']
+    preferredCertifications: ['G', 'PG'],
+    keywords: ['magic', 'cozy', 'heartwarming', 'friendship', 'family']
   },
   silly: {
-    genres: ['comedy', 'family'],
+    genres: ['comedy', 'family', 'animation'],
     minRating: 6.5,
-    preferredCertifications: ['G', 'PG']
+    preferredCertifications: ['G', 'PG'],
+    keywords: ['funny', 'silly', 'comedy', 'laugh', 'humor']
   },
   adventure: {
-    genres: ['adventure', 'action', 'sci-fi'],
+    genres: ['adventure', 'action', 'sci-fi', 'fantasy'],
     minRating: 7.0,
-    preferredCertifications: ['PG', 'PG-13']
+    preferredCertifications: ['PG', 'PG-13'],
+    keywords: ['adventure', 'quest', 'journey', 'action', 'hero']
   },
   artsy: {
     genres: ['animation', 'drama', 'foreign'],
     minRating: 7.5,
-    preferredCertifications: ['G', 'PG', 'PG-13']
+    preferredCertifications: ['G', 'PG', 'PG-13'],
+    keywords: ['artistic', 'animation', 'creative', 'unique', 'beautiful']
   },
   musical: {
-    genres: ['musical'],
-    minRating: 7.0,
-    preferredCertifications: ['G', 'PG']
+    genres: ['music'],
+    minRating: 6.0,
+    preferredCertifications: ['G', 'PG', 'PG-13'],
+    keywords: ['musical', 'singing', 'dance', 'broadway', 'song', 'performance']
   },
   classic: {
-    genres: ['classic', 'family', 'comedy'],
+    genres: ['family', 'comedy', 'drama', 'adventure'],
     yearEnd: 1980,
     minRating: 7.5,
-    preferredCertifications: ['G', 'PG']
+    preferredCertifications: ['G', 'PG'],
+    keywords: ['classic', 'timeless', 'vintage', 'nostalgic']
   },
   millennial: {
-    genres: ['family', 'comedy', 'adventure'],
+    genres: ['family', 'comedy', 'adventure', 'animation'],
     yearStart: 1980,
     yearEnd: 2010,
     minRating: 6.5,
-    preferredCertifications: ['G', 'PG', 'PG-13']
+    preferredCertifications: ['G', 'PG', 'PG-13'],
+    keywords: ['90s', '80s', 'childhood', 'retro', 'nostalgia']
   }
 };
+
+// Add musical keywords to help identify musical content
+const MUSICAL_KEYWORDS = [
+  'musical',
+  'singing',
+  'dance',
+  'song',
+  'concert',
+  'broadway',
+  'music',
+  'choreography',
+  'performance'
+];
 
 type ThemeConfig = {
   keywords: string[];
@@ -99,6 +120,7 @@ export class MovieRecommendationService {
   private genreIdMap: Map<string, number> = new Map();
   private readonly GENRE_CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
   private readonly MOVIE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+  private currentVibe: VibeType = 'cozy'; // Default vibe
 
   constructor() {
     this.initializeGenreMap();
@@ -144,6 +166,7 @@ export class MovieRecommendationService {
   }
 
   private getCertificationsForAgeGroups(ageGroups: AgeGroup[]): string[] {
+    // Base certification map showing which age groups can watch which ratings
     const certificationMap: Record<string, AgeGroup[]> = {
       'G': ['preschool', 'elementary', 'tweens', 'teens', 'adults'],
       'PG': ['preschool', 'elementary', 'tweens', 'teens', 'adults'],
@@ -151,6 +174,18 @@ export class MovieRecommendationService {
       'R': ['adults']
     };
 
+    // If teens are the youngest viewers, prioritize PG-13 content
+    const youngestGroup = ageGroups.sort((a, b) => {
+      const ageOrder = ['preschool', 'elementary', 'tweens', 'teens', 'adults'];
+      return ageOrder.indexOf(a) - ageOrder.indexOf(b);
+    })[0];
+
+    if (youngestGroup === 'teens') {
+      // Return certifications prioritizing PG-13, but include PG as fallback
+      return ['PG-13', 'PG'];
+    }
+
+    // Otherwise return all valid certifications for the age groups
     return Object.entries(certificationMap)
       .filter(([_, allowedGroups]) => 
         ageGroups.some(group => allowedGroups.includes(group)))
@@ -209,6 +244,11 @@ export class MovieRecommendationService {
       cert => allowedCertifications.includes(cert)
     );
 
+    // For musicals, add the vibe-specific keywords
+    const keywords = vibe === 'musical' 
+      ? (config as typeof VIBE_CONFIGS['musical']).keywords
+      : (theme && theme !== 'none' ? THEME_CONFIGS[theme]?.keywords : undefined);
+
     const filters: MovieFilters = {
       genres: genreIds,
       yearStart: config.yearStart,
@@ -216,7 +256,7 @@ export class MovieRecommendationService {
       minRating: config.minRating,
       certifications,
       language: 'en',
-      keywords: theme && theme !== 'none' ? THEME_CONFIGS[theme]?.keywords : undefined
+      keywords
     };
 
     try {
@@ -239,6 +279,9 @@ export class MovieRecommendationService {
     limit: number = 10,
     theme?: string
   ): Promise<TMDBMovie[]> {
+    // Set the current vibe for scoring
+    this.currentVibe = vibe;
+
     // Wait for genre map to be initialized if it hasn't been
     if (this.genreIdMap.size === 0) {
       await this.initializeGenreMap();
@@ -267,46 +310,66 @@ export class MovieRecommendationService {
     if (voteCount < 100) score *= 0.8;
     if (voteCount < 50) score *= 0.6;
 
-    // If a theme is selected (and it's not 'none'), make it the primary factor
+    const movieGenres = this.getGenreNames(movie.genre_ids || []).map(g => g.toLowerCase());
+    const titleAndOverview = `${movie.title} ${movie.overview}`.toLowerCase();
+
+    // Get the current vibe configuration
+    const vibeConfig = VIBE_CONFIGS[this.currentVibe];
+    if (vibeConfig) {
+      // Check for vibe genre matches
+      const vibeGenreMatches = vibeConfig.genres.filter(g => 
+        movieGenres.includes(g.toLowerCase())
+      ).length;
+      
+      // Boost score based on genre matches
+      if (vibeGenreMatches > 0) {
+        score *= (1 + (vibeGenreMatches * 0.3));
+      }
+
+      // Check for vibe keyword matches
+      if (vibeConfig.keywords) {
+        const vibeKeywordMatches = vibeConfig.keywords.filter(k =>
+          titleAndOverview.includes(k.toLowerCase())
+        ).length;
+        
+        if (vibeKeywordMatches > 0) {
+          score *= (1 + (vibeKeywordMatches * 0.2));
+        }
+      }
+
+      // Year-based adjustments
+      const releaseYear = new Date(movie.release_date).getFullYear();
+      if (vibeConfig.yearStart && releaseYear < vibeConfig.yearStart) {
+        score *= 0.5; // Penalize movies too old
+      }
+      if (vibeConfig.yearEnd && releaseYear > vibeConfig.yearEnd) {
+        score *= 0.5; // Penalize movies too new
+      }
+    }
+
+    // If a theme is selected (and it's not 'none'), apply theme scoring
     if (theme && theme !== 'none' && THEME_CONFIGS[theme]) {
       const themeConfig = THEME_CONFIGS[theme];
       let themeScore = 0;
 
       // Check for theme genre matches
-      const movieGenres = this.getGenreNames(movie.genre_ids || []).map(g => g.toLowerCase());
       const themeGenreMatches = themeConfig.additionalGenres.filter(g => 
         movieGenres.includes(g.toLowerCase())
       ).length;
       
-      // Add points for genre matches (0.5 points per match)
       themeScore += themeGenreMatches * 0.5;
 
       // Check for theme keyword matches
-      const keywords = movie.keywords?.keywords || [];
-      const keywordMatches = keywords.filter(k => 
-        themeConfig.keywords.some(tk => k.name.toLowerCase().includes(tk.toLowerCase()))
-      ).length;
-      
-      // Add points for keyword matches (1 point per match)
-      themeScore += keywordMatches;
-
-      // Check title and overview for theme keywords
       const titleAndOverview = `${movie.title} ${movie.overview}`.toLowerCase();
-      const textKeywordMatches = themeConfig.keywords.filter(k =>
+      const themeKeywordMatches = themeConfig.keywords.filter(k =>
         titleAndOverview.includes(k.toLowerCase())
       ).length;
       
-      // Add points for title/overview matches (0.3 points per match)
-      themeScore += textKeywordMatches * 0.3;
+      themeScore += themeKeywordMatches;
 
-      // If we have any theme matches, make them the primary factor
+      // If we have any theme matches, make them a significant factor
       if (themeScore > 0) {
-        // Base score becomes 5 + theme score (max ~10)
-        // Then multiply by the normalized rating factor (0.5-1.0)
-        score = (5 + themeScore) * (0.5 + (movie.vote_average / 20));
-      } else {
-        // If no theme matches, severely penalize the score
-        score *= 0.2;
+        score *= (1 + themeScore * 0.4);
       }
     }
 
