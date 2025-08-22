@@ -5,6 +5,7 @@ import Questionnaire from './pages/Questionnaire';
 import VibeSelector from './pages/VibeSelector';
 import ThemeSelector from './pages/ThemeSelector';
 import Recommendations from './pages/Recommendations';
+import MovieDetails from './pages/MovieDetails';
 import MovieTest from './components/MovieTest';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="vibe-selector" element={<VibeSelector />} />
           <Route path="theme-selector" element={<ThemeSelector />} />
           <Route path="recommendations" element={<Recommendations />} />
+          <Route path="movie/:id" element={<MovieDetails />} />
           <Route path="test" element={<MovieTest />} />
         </Route>
       </Routes>

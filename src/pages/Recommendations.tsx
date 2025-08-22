@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { movieRecommendations } from '../services/movieRecommendations';
-import { tmdbService } from '../services/tmdb';
 import type { TMDBMovie } from '../services/tmdb';
 import type { VibeType, AgeGroup, ContentPreferences } from '../services/movieRecommendations';
+import MovieCard from '../components/MovieCard';
 
 export default function Recommendations() {
   const location = useLocation();
@@ -49,7 +49,12 @@ export default function Recommendations() {
   }, [location.state]);
 
   const handleBack = () => {
-    navigate('/theme-selector');
+    navigate('/theme-selector', {
+      state: {
+        familyData: location.state?.familyData,
+        selectedVibe: location.state?.selectedVibe
+      }
+    });
   };
 
   if (loading) {
@@ -96,36 +101,7 @@ export default function Recommendations() {
       {movies.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {movies.map(movie => (
-            <div 
-              key={movie.id}
-              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
-            >
-              {movie.poster_path ? (
-                <img
-                  src={tmdbService.getImageUrl(movie.poster_path)}
-                  alt={movie.title}
-                  className="w-full h-64 object-cover"
-                />
-              ) : (
-                <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400">No poster available</span>
-                </div>
-              )}
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-1">{movie.title}</h3>
-                <p className="text-sm text-gray-600 mb-2">
-                  {new Date(movie.release_date).getFullYear()}
-                </p>
-                <div className="flex items-center mb-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    ★ {movie.vote_average.toFixed(1)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-600 line-clamp-3">
-                  {movie.overview}
-                </p>
-              </div>
-            </div>
+            <MovieCard key={movie.id} movie={movie} />
           ))}
         </div>
       ) : (
