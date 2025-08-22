@@ -80,10 +80,10 @@ export default function ThemeSelector() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+        <h2 className="text-2xl font-bold text-vintage-brown mb-4">
           Any specific themes you're interested in?
         </h2>
-        <p className="text-gray-600">
+        <p className="text-vintage-brown/80">
           Choose a theme to help us find the perfect movie
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function ThemeSelector() {
               relative h-48 rounded-xl overflow-hidden transition-all duration-200
               ${
                 selectedTheme === theme.id
-                  ? 'ring-4 ring-primary-500 scale-[0.98]'
+                  ? 'ring-4 ring-vintage-sage scale-[0.98]'
                   : 'hover:scale-[0.98]'
               }
             `}
@@ -117,15 +117,15 @@ export default function ThemeSelector() {
         <button
           onClick={() => handleThemeSelect('none')}
           className={`
-            relative h-48 rounded-xl transition-all duration-200 border-2 border-dashed border-gray-300
+            relative h-48 rounded-xl transition-all duration-200 border-2 border-dashed border-vintage-rose/50
             ${
               selectedTheme === 'none'
-                ? 'ring-4 ring-primary-500 scale-[0.98] bg-gray-50'
-                : 'hover:scale-[0.98] hover:bg-gray-50'
+                ? 'ring-4 ring-vintage-sage scale-[0.98] bg-vintage-beige'
+                : 'hover:scale-[0.98] hover:bg-vintage-beige'
             }
           `}
         >
-          <h3 className="text-2xl font-bold text-gray-500">
+          <h3 className="text-2xl font-bold text-vintage-brown">
             No Theme
           </h3>
         </button>

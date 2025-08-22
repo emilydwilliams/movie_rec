@@ -15,7 +15,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <Link 
       to={`/movie/${movie.id}`}
-      className="block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 h-full flex flex-col transform hover:scale-[1.02]"
+      className="block bg-vintage-beige rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 h-full flex flex-col transform hover:scale-[1.02] border border-vintage-rose/20"
     >
       {movie.poster_path ? (
         <img
@@ -24,25 +24,30 @@ export default function MovieCard({ movie }: MovieCardProps) {
           className="w-full h-80 object-cover"
         />
       ) : (
-        <div className="w-full h-80 bg-gray-200 flex items-center justify-center">
-          <span className="text-gray-400">No poster available</span>
+        <div className="w-full h-80 bg-vintage-rose/20 flex items-center justify-center">
+          <span className="text-vintage-brown/60">No poster available</span>
         </div>
       )}
       
       <div className="p-6 flex-1 flex flex-col">
-        <h3 className="font-bold text-xl mb-2">{movie.title}</h3>
-        <p className="text-sm text-gray-600 mb-3">
+        <h3 className="font-bold text-xl mb-2 text-vintage-brown">{movie.title}</h3>
+        <p className="text-sm text-vintage-brown/60 mb-3">
           {new Date(movie.release_date).getFullYear()}
         </p>
         
-        {/* TMDB Rating */}
-        <div className="flex items-center mb-4">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+        {/* TMDB Rating and Content Rating */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-vintage-sage/20 text-vintage-brown border border-vintage-sage/30">
             ★ {movie.vote_average.toFixed(1)}
           </span>
+          {movie.certification && (
+            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-vintage-rose/20 text-vintage-brown border border-vintage-rose/30">
+              {movie.certification}
+            </span>
+          )}
         </div>
 
-        <p className="text-base text-gray-600 flex-1">
+        <p className="text-base text-vintage-brown/80 flex-1">
           {truncateText(movie.overview)}
         </p>
       </div>

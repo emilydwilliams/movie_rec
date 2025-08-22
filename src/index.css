@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-vintage-cream text-vintage-brown;
   }
 }
 
@@ -17,24 +17,24 @@
     @apply px-4 py-2 rounded-md font-medium transition-all duration-200;
   }
   .btn-primary {
-    @apply bg-primary-500 text-white hover:text-white shadow-sm hover:shadow-md hover:scale-105 active:scale-100;
+    @apply bg-vintage-sage text-vintage-cream hover:bg-vintage-brown hover:text-vintage-cream shadow-sm hover:shadow-md hover:scale-105 active:scale-100;
   }
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+    @apply bg-vintage-beige text-vintage-brown hover:bg-vintage-rose;
   }
   .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-vintage-beige rounded-lg shadow-md p-6 border border-vintage-rose/20;
   }
 }
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  line-height: 1.6;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color-scheme: light;
+  color: #7e685a;
+  background-color: #f8f1e5;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -44,11 +44,11 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: #7e685a;
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: #c8a6a6;
 }
 
 body {
@@ -66,32 +66,35 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #c8a6a6;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #9fb8ad;
+  color: #f8f1e5;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.25s ease;
 }
 button:hover {
-  border-color: #646cff;
+  background-color: #7e685a;
+  border-color: #7e685a;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #c8a6a6;
+  outline-offset: 2px;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: #7e685a;
+    background-color: #f8f1e5;
   }
   a:hover {
-    color: #747bff;
+    color: #c8a6a6;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #9fb8ad;
   }
 }

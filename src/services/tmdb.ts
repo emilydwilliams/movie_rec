@@ -180,11 +180,10 @@ class TMDBService {
       params['primary_release_date.lte'] = `${filters.yearEnd}-12-31`;
     }
 
-    // Temporarily disable certification filtering to debug Parent Trap issue
-    // if (filters.certifications?.length) {
-    //   params.certification_country = 'US';
-    //   params.certification = filters.certifications.join('|');
-    // }
+    if (filters.certifications?.length) {
+      params.certification_country = 'US';
+      params.certification = filters.certifications.join('|');
+    }
 
     if (filters.language) {
       params.with_original_language = filters.language;
@@ -307,7 +306,7 @@ class TMDBService {
 
       // Filter out movies with low vote counts and sort by vote average
       return response.results
-        .filter(movie => movie.vote_count >= 100)
+        .filter(movie => (movie.vote_count || 0) >= 100)
         .sort((a, b) => b.vote_average - a.vote_average)
         .slice(0, limit);
     } catch (error) {

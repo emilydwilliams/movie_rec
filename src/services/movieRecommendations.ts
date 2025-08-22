@@ -243,6 +243,9 @@ export class MovieRecommendationService {
       cache.clear();
     }
     
+    // Clear cache to ensure content ratings are fetched fresh
+    cache.clear();
+    
     const genreIds = this.getGenreIds(genres);
     
     // Get allowed certifications based on age groups
@@ -387,9 +390,20 @@ export class MovieRecommendationService {
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
     
-
+    // Fetch certifications for the final selected movies
+    const moviesWithCertifications = await Promise.all(
+      finalResults.map(async ({ movie }) => {
+        try {
+          const certification = await tmdbService.getMovieCertification(movie.id);
+          return { ...movie, certification: certification || undefined };
+        } catch (error) {
+          console.warn(`Failed to fetch certification for movie ${movie.id}:`, error);
+          return movie; // Return movie without certification if fetch fails
+        }
+      })
+    );
     
-    return finalResults.map(({ movie }) => movie);
+    return moviesWithCertifications;
   }
 
   private async calculateMovieScoreWithSentiment(
