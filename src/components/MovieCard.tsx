@@ -17,17 +17,17 @@ export default function MovieCard({ movie }: MovieCardProps) {
       to={`/movie/${movie.id}`}
       className="block bg-vintage-beige rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 h-full flex flex-col transform hover:scale-[1.02] border border-vintage-rose/20"
     >
-      {movie.poster_path ? (
-        <img
-          src={tmdbService.getImageUrl(movie.poster_path)}
-          alt={movie.title}
-          className="w-full h-80 object-cover"
-        />
-      ) : (
-        <div className="w-full h-80 bg-vintage-rose/20 flex items-center justify-center">
+      <div className="w-full aspect-[2/3] bg-vintage-cream flex items-center justify-center">
+        {movie.poster_path ? (
+          <img
+            src={tmdbService.getImageUrl(movie.poster_path)}
+            alt={movie.title}
+            className="w-full h-full object-contain"
+          />
+        ) : (
           <span className="text-vintage-brown/60">No poster available</span>
-        </div>
-      )}
+        )}
+      </div>
       
       <div className="p-6 flex-1 flex flex-col">
         <h3 className="font-bold text-xl mb-2 text-vintage-brown">{movie.title}</h3>

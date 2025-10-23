@@ -29,13 +29,13 @@ const VIBE_CONFIGS: Record<VibeType, VibeConfig> = {
   cozy: {
     genres: ['family', 'fantasy', 'animation'],
     minRating: 7.0,
-    preferredCertifications: ['G', 'PG'],
+    preferredCertifications: ['G', 'PG', 'PG-13'],
     keywords: ['magic', 'cozy', 'heartwarming', 'friendship', 'family']
   },
   silly: {
     genres: ['comedy', 'family', 'animation'],
     minRating: 6.5,
-    preferredCertifications: ['G', 'PG'],
+    preferredCertifications: ['G', 'PG', 'PG-13'],
     keywords: ['funny', 'silly', 'comedy', 'laugh', 'humor']
   },
   adventure: {
@@ -60,7 +60,7 @@ const VIBE_CONFIGS: Record<VibeType, VibeConfig> = {
     genres: ['family', 'comedy', 'drama', 'adventure'],
     yearEnd: 1980,
     minRating: 7.5,
-    preferredCertifications: ['G', 'PG'],
+    preferredCertifications: ['G', 'PG', 'PG-13'],
     keywords: ['classic', 'timeless', 'vintage', 'nostalgic']
   },
   millennial: {
@@ -157,30 +157,30 @@ export class MovieRecommendationService {
   }
 
   private getCertificationsForAgeGroups(ageGroups: AgeGroup[]): string[] {
-    // Base certification map showing which age groups can watch which ratings
-    const certificationMap: Record<string, AgeGroup[]> = {
-      'G': ['preschool', 'elementary', 'tweens', 'teens', 'adults'],
-      'PG': ['preschool', 'elementary', 'tweens', 'teens', 'adults'],
-      'PG-13': ['tweens', 'teens', 'adults'],
-      'R': ['adults']
-    };
-
-    // If teens are the youngest viewers, prioritize PG-13 content
+    // Find the youngest age group to determine appropriate ratings
     const youngestGroup = ageGroups.sort((a, b) => {
       const ageOrder = ['preschool', 'elementary', 'tweens', 'teens', 'adults'];
       return ageOrder.indexOf(a) - ageOrder.indexOf(b);
     })[0];
 
-    if (youngestGroup === 'teens') {
-      // Return certifications prioritizing PG-13, but include PG as fallback
-      return ['PG-13', 'PG'];
+    // Return age-appropriate certifications based on youngest viewer
+    switch (youngestGroup) {
+      case 'preschool':
+      case 'elementary':
+        return ['G', 'PG']; // Young kids: G and PG only
+      
+      case 'tweens':
+        return ['PG', 'PG-13']; // Tweens: PG and PG-13, skip G (too young)
+      
+      case 'teens':
+        return ['PG-13', 'PG']; // Teens: Prioritize PG-13, include PG, exclude G
+      
+      case 'adults':
+        return ['PG-13', 'PG', 'R']; // Adults: All ratings except G (too young for adults-only viewing)
+      
+      default:
+        return ['G', 'PG']; // Fallback to safe options
     }
-
-    // Otherwise return all valid certifications for the age groups
-    return Object.entries(certificationMap)
-      .filter(([_, allowedGroups]) => 
-        ageGroups.some(group => allowedGroups.includes(group)))
-      .map(([cert]) => cert);
   }
 
   private generateMovieCacheKey(
@@ -251,10 +251,11 @@ export class MovieRecommendationService {
     // Get allowed certifications based on age groups
     const allowedCertifications = this.getCertificationsForAgeGroups(ageGroups);
     
-    // Intersect with vibe's preferred certifications
-    const certifications = config.preferredCertifications.filter(
-      cert => allowedCertifications.includes(cert)
-    );
+    console.log(`🎯 Age groups: ${ageGroups.join(', ')}`);
+    console.log(`🎯 Allowed certifications: ${allowedCertifications.join(', ')}`);
+    
+    // Use age-appropriate certifications, prioritizing what the audience actually wants to watch
+    const certifications = allowedCertifications;
 
     // Only use vibe-specific keywords in TMDB query, not theme keywords
     // Theme keywords will be applied during sentiment analysis for better results
@@ -267,14 +268,14 @@ export class MovieRecommendationService {
       yearStart: config.yearStart,
       yearEnd: config.yearEnd,
       minRating: config.minRating,
-      certifications,
+      certifications, // Try using TMDB certification filtering first
       language: 'en',
       keywords
     };
 
     try {
-      // Fetch many more pages to find movies like The Parent Trap that might not be in top results
-      const pagesToFetch = 100; // Get 100 pages = ~2,000 movies for comprehensive search
+      // Fetch multiple pages to find diverse movies
+      const pagesToFetch = 20; // Get 20 pages = ~400 movies for comprehensive search
       console.log(`Starting comprehensive search: fetching ${pagesToFetch} pages for vibe: ${vibe}, theme: ${theme || 'none'}`);
       console.log(`Search filters:`, {
         genres: genres,
@@ -321,7 +322,33 @@ export class MovieRecommendationService {
       
       console.log(`Comprehensive search complete: fetched ${allMovies.length} movies from ${pagesToFetch} pages for vibe: ${vibe}, theme: ${theme || 'none'}`);
       
-
+      // If TMDB certification filtering didn't return enough results, try without certification filter
+      if (allMovies.length < 50) {
+        console.log(`⚠️ Only ${allMovies.length} movies found with certification filter. Trying without certification filter...`);
+        
+        const filtersWithoutCert: MovieFilters = {
+          genres: genreIds,
+          yearStart: config.yearStart,
+          yearEnd: config.yearEnd,
+          minRating: config.minRating,
+          language: 'en',
+          keywords
+        };
+        
+        // Fetch a smaller number of pages without certification filter
+        const fallbackMovies: TMDBMovie[] = [];
+        for (let page = 1; page <= 10; page++) {
+          try {
+            const response = await tmdbService.discoverMovies(filtersWithoutCert, page);
+            fallbackMovies.push(...response.results);
+          } catch (error) {
+            console.warn(`Failed to fetch fallback page ${page}:`, error);
+          }
+        }
+        
+        console.log(`📦 Fallback search found ${fallbackMovies.length} movies without certification filter`);
+        allMovies.push(...fallbackMovies);
+      }
       
       // Cache the results
       cache.set(cacheKey, allMovies, this.MOVIE_CACHE_TTL);
