@@ -2,6 +2,15 @@ import { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
+// Import images
+import cozyMagicalImg from '../assets/vibes/cozy_magical.png';
+import sweetSillyImg from '../assets/vibes/sweet_silly.png';
+import adventureImg from '../assets/vibes/adventure.png';
+import artisticImg from '../assets/vibes/artistic.png';
+import musicalsImg from '../assets/vibes/musicals.png';
+import classicImg from '../assets/vibes/classic.png';
+import millennialImg from '../assets/vibes/millennial.png';
+
 type Vibe = {
   id: string;
   name: string;
@@ -14,43 +23,43 @@ const VIBES: Vibe[] = [
     id: 'cozy',
     name: 'Cozy and Magical',
     emoji: '🍄',
-    imageUrl: '/src/assets/vibes/cozy_magical.png'
+    imageUrl: cozyMagicalImg
   },
   {
     id: 'silly',
     name: 'Silly and Sweet',
     emoji: '🧁',
-    imageUrl: '/src/assets/vibes/sweet_silly.png'
+    imageUrl: sweetSillyImg
   },
   {
     id: 'adventure',
     name: 'Adventure Time',
     emoji: '🚀',
-    imageUrl: '/src/assets/vibes/adventure.png'
+    imageUrl: adventureImg
   },
   {
     id: 'artsy',
     name: 'Artistic Animation',
     emoji: '🎨',
-    imageUrl: '/src/assets/vibes/artistic.png'
+    imageUrl: artisticImg
   },
   {
     id: 'musical',
     name: 'Musical Fun',
     emoji: '🎶',
-    imageUrl: '/src/assets/vibes/musicals.png'
+    imageUrl: musicalsImg
   },
   {
     id: 'classic',
     name: 'True Classic',
     emoji: '🎬',
-    imageUrl: '/src/assets/vibes/classic.png'
+    imageUrl: classicImg
   },
   {
     id: 'millennial',
     name: 'Millennial Childhood',
     emoji: '📼',
-    imageUrl: '/src/assets/vibes/millennial.png'
+    imageUrl: millennialImg
   }
 ];
 
